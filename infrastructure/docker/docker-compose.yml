@@ -1,0 +1,198 @@
+version: "3.9"
+
+networks:
+  road-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  mlflow-data:
+  grafana-data:
+  model-weights:
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: road_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: roadintelligence
+      POSTGRES_USER: roaduser
+      POSTGRES_PASSWORD: roadpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roaduser -d roadintelligence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - road-net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: road_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - road-net
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: road_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://roaduser:roadpass@postgres:5432/roadintelligence
+      REDIS_URL: redis://redis:6379/0
+      APP_ENV: production
+      LOG_LEVEL: info
+      PYTHONPATH: /app
+      ROAD_DEFECT_MODEL_PATH: /app/models/rdd2022-yolov8s-best.pt
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../models:/app/models:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - road-net
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+    container_name: road_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/nginx-health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - road-net
+
+  parking_anpr:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.parking_anpr
+    container_name: road_parking_anpr
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://roaduser:roadpass@postgres:5432/roadintelligence
+      APP_ENV: production
+      LOG_LEVEL: info
+      MODEL_WEIGHTS_DIR: /app/weights
+    ports:
+      - "8001:8001"
+    volumes:
+      - model-weights:/app/weights
+      - ../../services/parking_anpr/models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - road-net
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.13.0
+    container_name: road_mlflow
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri /mlflow/mlruns
+      --default-artifact-root /mlflow/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - road-net
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: road_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerting_rules.yml:/etc/prometheus/alerting_rules.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - road-net
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: road_grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: roadintelligence2024
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: localhost
+      GF_SERVER_HTTP_PORT: "3000"
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - road-net

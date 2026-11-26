@@ -1,0 +1,59 @@
+FROM python:3.11-slim
+
+LABEL maintainer="road-intelligence-team"
+LABEL version="1.0.0"
+LABEL description="Parking ANPR Service with computer vision dependencies"
+
+# Install system dependencies required for OpenCV and image processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # OpenCV runtime dependencies
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    # Image format libraries
+    libpng-dev \
+    libjpeg-dev \
+    # Networking utilities for health checks
+    curl \
+    # Build tools (removed after install)
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser -u 1001 appuser
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy service source code
+COPY . .
+
+# Create weights directory
+RUN mkdir -p /app/weights && chown -R appuser:appuser /app
+
+# Download model weights during build
+# NOTE: This requires network access at build time.
+# In restricted environments, mount weights via volume instead.
+RUN python models/download_weights.py --dest /app/weights || \
+    echo "WARNING: Weight download failed — mount weights volume at runtime"
+
+# Set ownership
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+# Expose the ANPR service port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Start the ANPR service
+CMD ["uvicorn", "parking_anpr_service:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]

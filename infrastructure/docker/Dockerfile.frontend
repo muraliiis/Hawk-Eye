@@ -1,0 +1,41 @@
+# ── Stage 1: Node Builder ─────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+LABEL stage="builder"
+
+WORKDIR /app
+
+# Install dependencies first (layer caching)
+COPY package.json package-lock.json ./
+RUN npm ci --frozen-lockfile
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
+
+# ── Stage 2: Nginx Runtime ────────────────────────────────────────────────────
+FROM nginx:alpine AS runtime
+
+LABEL maintainer="road-intelligence-team"
+LABEL version="1.0.0"
+LABEL description="Road Intelligence Platform Frontend"
+
+# Remove default nginx static assets and config
+RUN rm -rf /usr/share/nginx/html/*
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy built assets from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose HTTP port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

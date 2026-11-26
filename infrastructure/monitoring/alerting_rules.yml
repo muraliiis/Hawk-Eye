@@ -1,0 +1,165 @@
+groups:
+  - name: road_intelligence_alerts
+    interval: 30s
+    rules:
+      # ── Service Availability ─────────────────────────────────────────────────
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: backend
+          team: platform
+        annotations:
+          summary: "Road Intelligence Backend is down"
+          description: >
+            The backend service (job={{ $labels.job }}, instance={{ $labels.instance }})
+            has been unreachable for more than 2 minutes.
+          runbook_url: "https://wiki.road-intelligence.internal/runbooks/backend-down"
+
+      - alert: ParkingANPRDown
+        expr: up{job="parking_anpr"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: parking_anpr
+          team: platform
+        annotations:
+          summary: "Parking ANPR Service is down"
+          description: >
+            The parking ANPR service (instance={{ $labels.instance }})
+            has been unreachable for more than 2 minutes.
+
+      # ── Error Rate ───────────────────────────────────────────────────────────
+      - alert: HighErrorRate
+        expr: >
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total[5m])) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          service: backend
+          team: platform
+        annotations:
+          summary: "High HTTP 5xx error rate detected"
+          description: >
+            The 5xx error rate is {{ $value | humanizePercentage }} over the last 5 minutes,
+            which exceeds the 5% threshold.
+          runbook_url: "https://wiki.road-intelligence.internal/runbooks/high-error-rate"
+
+      - alert: CriticalErrorRate
+        expr: >
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total[5m])) > 0.20
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+          team: platform
+        annotations:
+          summary: "Critical HTTP 5xx error rate"
+          description: >
+            The 5xx error rate is {{ $value | humanizePercentage }} — over 20% of all requests are failing.
+
+      # ── Latency ─────────────────────────────────────────────────────────────
+      - alert: HighLatency
+        expr: >
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+          team: platform
+        annotations:
+          summary: "High API response latency (P95 > 2s)"
+          description: >
+            The P95 response latency is {{ $value | humanizeDuration }},
+            which exceeds the 2 second SLA threshold.
+          runbook_url: "https://wiki.road-intelligence.internal/runbooks/high-latency"
+
+      - alert: CriticalLatency
+        expr: >
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 5.0
+        for: 3m
+        labels:
+          severity: critical
+          service: backend
+          team: platform
+        annotations:
+          summary: "Critical API response latency (P99 > 5s)"
+          description: >
+            The P99 response latency is {{ $value | humanizeDuration }}.
+            Immediate investigation required.
+
+      # ── Database ─────────────────────────────────────────────────────────────
+      - alert: DatabaseConnectionFailed
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: postgres
+          team: platform
+        annotations:
+          summary: "PostgreSQL database is unreachable"
+          description: >
+            The PostgreSQL exporter (instance={{ $labels.instance }}) reports the
+            database is down. All backend operations are likely failing.
+          runbook_url: "https://wiki.road-intelligence.internal/runbooks/database-down"
+
+      - alert: DatabaseHighConnections
+        expr: pg_stat_database_numbackends{datname="roadintelligence"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+          team: platform
+        annotations:
+          summary: "PostgreSQL connection count is high"
+          description: >
+            There are {{ $value }} active connections to the roadintelligence database.
+            Max connections may be approaching the limit.
+
+      # ── Redis ────────────────────────────────────────────────────────────────
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+          team: platform
+        annotations:
+          summary: "Redis cache is down"
+          description: >
+            Redis (instance={{ $labels.instance }}) has been unreachable for 1 minute.
+            Caching and session management are impacted.
+
+      # ── Resource Usage ───────────────────────────────────────────────────────
+      - alert: HighMemoryUsage
+        expr: >
+          container_memory_usage_bytes{container_label_com_docker_compose_service="backend"}
+          / 536870912 > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+          team: platform
+        annotations:
+          summary: "Backend container memory usage above 90%"
+          description: >
+            The backend container is using {{ $value | humanizePercentage }} of its 512Mi memory limit.
+
+      - alert: HighCPUUsage
+        expr: >
+          rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service="backend"}[5m])
+          > 0.80
+        for: 10m
+        labels:
+          severity: warning
+          service: backend
+          team: platform
+        annotations:
+          summary: "Backend container CPU usage above 80%"
+          description: >
+            The backend container CPU usage is {{ $value | humanizePercentage }} over the last 5 minutes.

@@ -1,0 +1,58 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: "road-intelligence-monitor"
+
+rule_files:
+  - "/etc/prometheus/alerting_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "backend"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend:8000"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "road-backend"
+
+  - job_name: "parking_anpr"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["parking_anpr:8001"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "parking-anpr-service"
+
+  - job_name: "cadvisor"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["cadvisor:8080"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "docker-host"
+
+  - job_name: "postgres"
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: "redis"
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["redis-exporter:9121"]

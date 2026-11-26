@@ -1,0 +1,475 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hawk Eye — Solution Brief</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1f2328;
+    background: #ffffff;
+    padding: 32px 16px 48px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+
+  /* Header */
+  .header { border-bottom: 2px solid #3b82d4; padding-bottom: 16px; margin-bottom: 28px; }
+  .header .tag-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .header .tag {
+    display: inline-block; background: #3b82d4; color: #fff;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 3px;
+  }
+  .header .team-tag {
+    display: inline-block; background: #1f2328; color: #fff;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 3px;
+  }
+  .header h1 { font-size: 26px; font-weight: 700; color: #1f2328; letter-spacing: -0.3px; }
+  .header .subtitle { font-size: 14px; color: #57606a; margin-top: 4px; }
+  .header .meta { font-size: 12px; color: #57606a; margin-top: 10px; }
+
+  /* Section */
+  section { margin-bottom: 28px; }
+  h2 {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: #3b82d4; border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 5px; margin-bottom: 14px;
+  }
+  h3 { font-size: 14px; font-weight: 700; color: #1f2328; margin-bottom: 6px; }
+  p { margin-bottom: 10px; color: #1f2328; }
+  ul { padding-left: 18px; margin-bottom: 10px; }
+  li { margin-bottom: 4px; }
+
+  /* Problem tiles */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .problem-card {
+    background: #f7f8fa; border: 1px solid #e5e7eb;
+    border-radius: 6px; padding: 12px 14px;
+  }
+  .problem-card .icon { font-size: 18px; margin-bottom: 4px; }
+  .problem-card strong { font-size: 13px; display: block; margin-bottom: 3px; }
+  .problem-card span { font-size: 12px; color: #57606a; }
+
+  /* Architecture */
+  .arch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+  .arch-box {
+    background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 6px;
+    padding: 10px; text-align: center;
+  }
+  .arch-box .layer { font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #57606a; margin-bottom: 4px; }
+  .arch-box .label { font-size: 12px; font-weight: 600; color: #1f2328; }
+  .arch-box .detail { font-size: 11px; color: #57606a; margin-top: 3px; }
+
+  /* Flow row */
+  .flow { display: flex; align-items: stretch; gap: 0; margin-bottom: 12px; flex-wrap: wrap; }
+  .flow-step {
+    flex: 1; min-width: 120px; background: #f7f8fa;
+    border: 1px solid #e5e7eb; border-radius: 6px;
+    padding: 10px 10px; text-align: center; position: relative;
+  }
+  .flow-step + .flow-step { margin-left: 6px; }
+  .flow-step .num {
+    display: inline-block; width: 20px; height: 20px; border-radius: 50%;
+    background: #3b82d4; color: #fff; font-size: 11px; font-weight: 700;
+    line-height: 20px; text-align: center; margin-bottom: 5px;
+  }
+  .flow-step .label { font-size: 12px; font-weight: 600; color: #1f2328; }
+  .flow-step .sub { font-size: 11px; color: #57606a; margin-top: 2px; }
+
+  /* Audience */
+  .audience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .audience-card {
+    border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;
+  }
+  .audience-card .aud-header {
+    padding: 8px 14px; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .audience-card.b2b .aud-header { background: #3b82d4; color: #fff; }
+  .audience-card.b2c .aud-header { background: #7c5cd8; color: #fff; }
+  .audience-card .aud-body { padding: 10px 14px; background: #f7f8fa; }
+  .audience-card .aud-body ul { padding-left: 16px; }
+  .audience-card .aud-body li { font-size: 12px; margin-bottom: 3px; }
+
+  /* Actions table */
+  .action-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .action-table th {
+    background: #f7f8fa; border: 1px solid #e5e7eb;
+    padding: 7px 10px; text-align: left; font-weight: 700; color: #1f2328;
+  }
+  .action-table td {
+    border: 1px solid #e5e7eb; padding: 7px 10px; vertical-align: top;
+    color: #1f2328;
+  }
+  .action-table tr:nth-child(even) td { background: #f7f8fa; }
+  .badge {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+  }
+  .badge.realtime { background: #dbeafe; color: #1d4ed8; }
+  .badge.async { background: #ede9fe; color: #5b21b6; }
+  .badge.batch { background: #d1fae5; color: #065f46; }
+
+  /* Device spec */
+  .spec-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .spec-card {
+    background: #f7f8fa; border: 1px solid #e5e7eb;
+    border-radius: 6px; padding: 10px 12px;
+  }
+  .spec-card .spec-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #57606a; margin-bottom: 4px; }
+  .spec-card .spec-value { font-size: 12px; font-weight: 600; color: #1f2328; }
+
+  /* Roadmap */
+  .roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .rm-card {
+    border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;
+  }
+  .rm-card .rm-phase {
+    background: #1f2328; color: #fff; font-size: 11px; font-weight: 700;
+    padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .rm-card .rm-title {
+    font-size: 12px; font-weight: 700; padding: 8px 10px 2px;
+  }
+  .rm-card ul { padding: 0 10px 10px 24px; }
+  .rm-card li { font-size: 11px; color: #57606a; margin-bottom: 2px; }
+
+  /* Value props */
+  .value-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .value-card {
+    background: #f7f8fa; border: 1px solid #e5e7eb;
+    border-radius: 6px; padding: 12px 14px;
+  }
+  .value-card .vc-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #3b82d4; margin-bottom: 5px; }
+  .value-card .vc-value { font-size: 18px; font-weight: 700; color: #1f2328; }
+  .value-card .vc-desc { font-size: 11px; color: #57606a; margin-top: 3px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px; padding-top: 14px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center; font-size: 12px; color: #57606a;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  
+  <div class="header">
+    <div class="tag-row">
+      <span class="tag">Solution Brief</span>
+      <span class="team-tag">Team Hawk</span>
+    </div>
+    <h1>Hawk Eye — Smart Road Intelligence Platform</h1>
+    <div class="subtitle">A dashcam-powered, Google Maps add-on that transforms every vehicle into a real-time road intelligence node</div>
+    <div class="meta">Version 1.0  |  November 2026  |  Confidential</div>
+  </div>
+
+  
+  <section>
+    <h2>Problem Statement</h2>
+    <p>Urban and inter-city road networks suffer from reactive information gaps. Drivers lack real-time, ground-truth data about road conditions ahead, leading to preventable accidents, inefficient routing, delayed emergency response, and unaddressed traffic violations. Existing map platforms aggregate user reports manually and intermittently — they do not provide continuous, automated, sensor-grade intelligence at scale.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="icon">⚠</div>
+        <strong>Road Hazards &amp; Conditions</strong>
+        <span>Potholes, waterlogging, construction zones, and debris go unreported until after incidents occur.</span>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🚑</div>
+        <strong>Accidents &amp; Emergencies</strong>
+        <span>Delayed notification to police and hospitals increases severity of outcomes.</span>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🚗</div>
+        <strong>Traffic Jams</strong>
+        <span>No proactive, sensor-verified congestion data for dynamic rerouting decisions.</span>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🔒</div>
+        <strong>Illegal Parking &amp; Violations</strong>
+        <span>Traffic departments lack automated evidence collection to act on violations efficiently.</span>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Proposed Solution</h2>
+    <p><strong>Hawk Eye</strong> is a cloud-connected dashcam platform built by <strong>Team Hawk</strong> that turns every enrolled vehicle into a continuously sensing road intelligence node. It operates as a plug-in layer on top of Google Maps, enriching its navigation graph with verified, real-time sensor data. The system closes the loop between detection, notification, routing, and enforcement.</p>
+  </section>
+
+  
+  <section>
+    <h2>System Architecture</h2>
+    <div class="arch">
+      <div class="arch-box">
+        <div class="layer">Layer 1</div>
+        <div class="label">Edge Device</div>
+        <div class="detail">Dashcam unit<br />GPS / IMU<br />LTE / 5G uplink</div>
+      </div>
+      <div class="arch-box">
+        <div class="layer">Layer 2</div>
+        <div class="label">Ingestion</div>
+        <div class="detail">Event stream<br />Video / image upload<br />Metadata pipeline</div>
+      </div>
+      <div class="arch-box">
+        <div class="layer">Layer 3</div>
+        <div class="label">Processing</div>
+        <div class="detail">AI / CV models<br />Event classifier<br />Geo-indexing</div>
+      </div>
+      <div class="arch-box">
+        <div class="layer">Layer 4</div>
+        <div class="label">Action Engine</div>
+        <div class="detail">Alerts &amp; routing<br />Authority APIs<br />Subscriber feed</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#57606a">All layers communicate over encrypted channels. The edge device operates in a store-and-forward mode under poor connectivity and syncs when signal is restored.</p>
+  </section>
+
+  
+  <section>
+    <h2>End-to-End Data Flow</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="num">1</div>
+        <div class="label">Capture</div>
+        <div class="sub">Dashcam records video + photos continuously</div>
+      </div>
+      <div class="flow-step">
+        <div class="num">2</div>
+        <div class="label">Package</div>
+        <div class="sub">Device attaches Device ID, GPS, IMU, speed, timestamp</div>
+      </div>
+      <div class="flow-step">
+        <div class="num">3</div>
+        <div class="label">Transmit</div>
+        <div class="sub">Encrypted payload sent to cloud via LTE / 5G</div>
+      </div>
+      <div class="flow-step">
+        <div class="num">4</div>
+        <div class="label">Analyse</div>
+        <div class="sub">AI classifies event type, severity, location</div>
+      </div>
+      <div class="flow-step">
+        <div class="num">5</div>
+        <div class="label">Act</div>
+        <div class="sub">Alerts dispatched to relevant parties in real time</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Hawk Eye Device — Key Specifications</h2>
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-label">Video</div>
+        <div class="spec-value">1080p / 4K<br />Front + Rear</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Connectivity</div>
+        <div class="spec-value">LTE / 5G<br />Wi-Fi (sync)</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Location</div>
+        <div class="spec-value">GPS + GLONASS<br />6-axis IMU</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">On-device AI</div>
+        <div class="spec-value">Edge inference<br />Event pre-filter</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Storage</div>
+        <div class="spec-value">64 GB local<br />Loop recording</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Power</div>
+        <div class="spec-value">OBD-II / Hardwire<br />Parking mode</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Automated Actions by Event Type</h2>
+    <table class="action-table">
+      <thead>
+        <tr>
+          <th>Event Detected</th>
+          <th>Immediate Action</th>
+          <th>Secondary Action</th>
+          <th>Mode</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Accident / Collision</td>
+          <td>Alert nearby subscribers, reroute traffic</td>
+          <td>Auto-notify Police &amp; Hospital Emergency via API</td>
+          <td><span class="badge realtime">Real-time</span></td>
+        </tr>
+        <tr>
+          <td>Road Hazard (pothole, debris)</td>
+          <td>Push hazard marker to Maps overlay</td>
+          <td>Notify road authority; schedule inspection ticket</td>
+          <td><span class="badge realtime">Real-time</span></td>
+        </tr>
+        <tr>
+          <td>Traffic Jam / Congestion</td>
+          <td>Update congestion layer; propose alternate routes</td>
+          <td>ETA recalculation for fleet operators</td>
+          <td><span class="badge realtime">Real-time</span></td>
+        </tr>
+        <tr>
+          <td>Illegal Parking</td>
+          <td>Capture geo-tagged evidence (image + GPS)</td>
+          <td>Submit report to Traffic Department portal</td>
+          <td><span class="badge async">Async</span></td>
+        </tr>
+        <tr>
+          <td>Rash / Dangerous Driving</td>
+          <td>Flag vehicle; alert nearby drivers</td>
+          <td>Share clip with Traffic Dept. for follow-up</td>
+          <td><span class="badge async">Async</span></td>
+        </tr>
+        <tr>
+          <td>Aggregate Road Analytics</td>
+          <td>—</td>
+          <td>Weekly heatmap reports to authorities &amp; partners</td>
+          <td><span class="badge batch">Batch</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  
+  <section>
+    <h2>Target Audience</h2>
+    <div class="audience-grid">
+      <div class="audience-card b2b">
+        <div class="aud-header">B2B — Business Customers</div>
+        <div class="aud-body">
+          <ul>
+            <li><strong>Delivery Partners</strong> — Swiggy, Zomato, Delhivery, FedEx: Fleet safety, optimised routing, delivery SLA protection</li>
+            <li><strong>Vehicle Manufacturers</strong> — OEM integration, ADAS data enrichment, pre-installed unit option</li>
+            <li><strong>Taxi / Ride-hail Services</strong> — Ola, Uber: Driver safety scoring, incident evidence, surge routing</li>
+            <li><strong>Traffic &amp; Civic Authorities</strong> — Violation evidence, road condition dashboards, infrastructure planning</li>
+          </ul>
+        </div>
+      </div>
+      <div class="audience-card b2c">
+        <div class="aud-header">B2C — Individual Subscribers</div>
+        <div class="aud-body">
+          <ul>
+            <li><strong>Daily Commuters</strong> — Subscription kit with device; real-time hazard alerts on commute route</li>
+            <li><strong>Personal Vehicle Owners</strong> — Insurance-grade drive recording, theft evidence</li>
+            <li><strong>Premium Tier</strong> — Advanced route intelligence, speed camera alerts, personalised commute reports</li>
+            <li><strong>Family Safety</strong> — Track family vehicles, emergency SOS alerts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Value Proposition at a Glance</h2>
+    <div class="value-row">
+      <div class="value-card">
+        <div class="vc-label">Network Effect</div>
+        <div class="vc-value">More vehicles = better data</div>
+        <div class="vc-desc">Every enrolled vehicle improves intelligence quality for all subscribers.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-label">Closed-loop Response</div>
+        <div class="vc-value">Detect → Act → Resolve</div>
+        <div class="vc-desc">From capture to authority notification in under 60 seconds for critical events.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-label">Platform Play</div>
+        <div class="vc-value">API-first architecture</div>
+        <div class="vc-desc">Partners and authorities consume data via open APIs, enabling ecosystem growth.</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Key Integrations</h2>
+    <ul>
+      <li><strong>Google Maps Platform</strong> — Routes API, Maps JavaScript API overlays for hazard and congestion layers</li>
+      <li><strong>Emergency Services</strong> — RESTful API or PSAP gateway integration for auto-dispatch notifications</li>
+      <li><strong>Traffic Department Portals</strong> — Challan / violation evidence submission via government API endpoints</li>
+      <li><strong>Fleet Management Systems</strong> — Webhook / SDK integration with Fleetx, Locus, or custom TMS platforms</li>
+      <li><strong>Insurance Providers</strong> — Telematics data feed for usage-based insurance (UBI) programmes</li>
+    </ul>
+  </section>
+
+  
+  <section>
+    <h2>Privacy &amp; Compliance</h2>
+    <ul>
+      <li>All video and imagery anonymised (face/plate blurring) before storage and sharing, except in verified emergency or enforcement submissions</li>
+      <li>Data residency controls to comply with regional data localisation laws (e.g., India DPDPA, GDPR)</li>
+      <li>Role-based access control (RBAC) — authorities receive only the data class they are authorised for</li>
+      <li>Subscriber opt-in consent model; data contribution is transparent and auditable</li>
+      <li>AES-256 encryption at rest and TLS 1.3 in transit</li>
+    </ul>
+  </section>
+
+  
+  <section>
+    <h2>Phased Delivery Roadmap</h2>
+    <div class="roadmap">
+      <div class="rm-card">
+        <div class="rm-phase">Phase 1 — Q1–Q2</div>
+        <div class="rm-title">Foundation</div>
+        <ul>
+          <li>Dashcam hardware design &amp; certification</li>
+          <li>Core ingestion pipeline</li>
+          <li>Basic event classifier (accident, jam)</li>
+          <li>Google Maps overlay MVP</li>
+          <li>Pilot with 1 delivery partner</li>
+        </ul>
+      </div>
+      <div class="rm-card">
+        <div class="rm-phase">Phase 2 — Q3–Q4</div>
+        <div class="rm-title">Scale &amp; Integrate</div>
+        <ul>
+          <li>Emergency services integration</li>
+          <li>Illegal parking detection model</li>
+          <li>Fleet management SDK</li>
+          <li>B2C subscription launch</li>
+          <li>Traffic dept. API go-live</li>
+        </ul>
+      </div>
+      <div class="rm-card">
+        <div class="rm-phase">Phase 3 — Year 2</div>
+        <div class="rm-title">Intelligence &amp; Ecosystem</div>
+        <ul>
+          <li>OEM embedded programme</li>
+          <li>Predictive congestion modelling</li>
+          <li>Insurance telematics API</li>
+          <li>City-level analytics dashboards</li>
+          <li>International expansion</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  
+  <div class="footer">Made with IBM Bob</div>
+
+</div>
+</body>
+</html>

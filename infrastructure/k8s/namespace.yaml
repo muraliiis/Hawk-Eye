@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: road-intelligence
+  labels:
+    name: road-intelligence
+    app.kubernetes.io/name: road-intelligence
+    app.kubernetes.io/managed-by: kubectl
+    environment: production
