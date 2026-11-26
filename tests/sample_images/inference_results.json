@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-11-22T09:04:44.668853+00:00",
+  "gps": {
+    "lat": 12.9716,
+    "lon": 77.5946,
+    "accuracy_m": 4.2,
+    "speed_kph": 38.0
+  },
+  "frame_size": "1280x720",
+  "device": "cuda",
+  "detections": {
+    "road_damage": [
+      {
+        "class": "longitudinal_crack",
+        "confidence": 0.617,
+        "bbox": [
+          599,
+          395,
+          632,
+          608
+        ],
+        "area_px": 7029,
+        "gps": {
+          "lat": 12.9716,
+          "lon": 77.5946,
+          "accuracy_m": 4.2,
+          "speed_kph": 38.0
+        }
+      }
+    ],
+    "vehicles": [],
+    "license_plates": []
+  },
+  "sam31": {
+    "total_tensors": 1623,
+    "params_M": 874.4,
+    "sections": {
+      "tracker": 457,
+      "detector": 1166
+    },
+    "status": "weights_loaded_requires_sam2_package"
+  }
+}

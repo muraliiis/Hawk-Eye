@@ -1,0 +1,21 @@
+Every road tells a story. But conventional navigation only sees distance and traffic. RoadSense sees the condition of the road itself.
+
+RoadSense combines road-following navigation, dashcam intelligence, GPS, IMU sensors, traffic signals, and parking observations into one safety-first platform.
+
+First, navigation. Each route is resolved against the driving road network before it is drawn. That means directions follow real streets instead of cutting through buildings, parks, or private property. Drivers can compare the fastest, safest, smoothest, and balanced routes.
+
+Next, perception. A consented dashcam stream or licensed local replay is analyzed frame by frame. The road-defect model identifies potholes and multiple crack types. Detections are confidence-scored, normalized, and published only when they pass quality controls.
+
+Sensor fusion gives every event context. GPS establishes location, while IMU data helps identify vibration and harsh braking. Stale positions are rejected, so uncertain observations are never presented as precise facts.
+
+Traffic intelligence combines observed speeds, anonymous telemetry, and road conditions. Congested segments, slowdowns, and incidents can trigger safer rerouting.
+
+RoadSense also separates legal speed limits from non-legal safety advice. When a pothole, speed breaker, or obstacle is ahead, the driver receives a clear, context-aware warning.
+
+Parking intelligence estimates roadside availability without promising a space that may no longer be free.
+
+For operations teams, the admin console provides a live city map, hazard triage, confidence and provenance, traffic controls, fleet health, privacy status, and repair-priority signals.
+
+Privacy is built in. Number plates are masked, raw local replay video is not retained, and the platform stores actionable RoadEvents rather than unnecessary personal data.
+
+RoadSense turns road observations into safer journeys, smarter routing, and evidence-based road maintenance.
